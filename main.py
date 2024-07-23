@@ -163,18 +163,16 @@ if __name__ == "__main__":
         #  - mean_elapsed time for flocker's step's time zone 
         #  - elapsed time of the simulation
         zone_names = ["system{name=\"flockers::step_system\"}", "system{name=\"krabmaga::engine::fields::field_2d::update_field\"}"]
-        simulation_result = {}
+        simulation_result = {"elapsed_time": 0}
 
-        with open('example.csv', newline='') as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=',')
+        with open(PATH_TO_TRACY_BENCHMARK_CSV_FILE, newline='') as csvfile:
+            csvreader = csv.DictReader(csvfile, delimiter=',')
 
             for row in csvreader:
                 zone_name = row['name'] 
                 if zone_name in zone_names:
                     mean_ns = float(row['mean_ns'])
                     simulation_result[zone_name] = mean_ns
-
-        print(simulation_result)
         # Extract from csv of the result some data
 
         # Delete csv # TEMPORARY temporary removed file from directory
@@ -193,6 +191,15 @@ if __name__ == "__main__":
     # 2 - elapsed time of simulation
     benchmark_result = open(PATH_TO_BENCHMARK_RESULT, "w")
     for simulation_result in simulation_results:
-        
+        # DEBUG
+        print(simulation_result)
+        # DEBUG
+
+        benchmark_result.write(str(simulation_result[zone_names[0]]))
+        benchmark_result.write(" ")
+        benchmark_result.write(str(simulation_result[zone_names[1]]))
+        benchmark_result.write(" ")
+        benchmark_result.write(str(simulation_result["elapsed_time"]))
+        benchmark_result.write("\n")
     # save simulations' data in the file at the end
 #----------------------------------------------------------------------------------------------------------------
