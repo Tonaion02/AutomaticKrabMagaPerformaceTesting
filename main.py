@@ -83,6 +83,7 @@ if __name__ == "__main__":
     PATH_TO_TRACY_RETRIEVE_CSV_EXE = os.path.join(PATH_TO_TRACY_FOLDER, TRACY_RETRIEVE_CSV_EXE)
     PATH_TO_TRACY_BENCHMARK_CSV_FILE = os.path.join(PATH_TO_DEST_FOLDER, BENCHMARK_CSV_FILE)
     PATH_TO_BENCHMARK_RESULT = os.path.join(PATH_TO_DEST_FOLDER, BENCHMARK_RESULT)
+    PATH_TO_TRASH_TRACY_DEBUG_FILE = os.path.join(PATH_TO_DEST_FOLDER, TRASH_TRACY_DEBUG_FILE)
     # Compute some complete paths
 
     # Define a list that describe the fields to extract and save
@@ -105,14 +106,18 @@ if __name__ == "__main__":
 
 
     # Retrieve the inputs from file and save parameters of simulations in an object
+    # The format expected is the sequent:
+    # 0 number of threads
+    # 1 number of agents
+    # 2 size of field
     simulations = []
 
     f = open(INPUT_FILE, "r")
     for line in f.readlines():
-        if line.isspace():
+        if line.isspace(): # skip if line is only formed by white-spaces
             continue
 
-        values = line.split()
+        values = line.split() # split on space line
 
         # DEBUG
         print(values[0])
@@ -164,7 +169,7 @@ if __name__ == "__main__":
     
             # Build and execute command to start tracy-capture(tracy's server) in background(in another thread)
             # we must run in another thread tracy-capture so we can run the simulation in this thread
-            command = PATH_TO_TRACY_EXE + " -f -o " + PATH_TO_RESULT_TRACY_FILE + " > " + TRASH_TRACY_DEBUG_FILE
+            command = PATH_TO_TRACY_EXE + " -f -o " + PATH_TO_RESULT_TRACY_FILE + " > " + PATH_TO_TRASH_TRACY_DEBUG_FILE
             # DEBUG
             print(command)
             # DEBUG
@@ -177,8 +182,9 @@ if __name__ == "__main__":
             # Save the current working directory and chdir to simulation's folder
     
             # Set properly RUSTFLAGS
-            command = "set RUSTFLAGS=-Awarnings"
-            os.system(command)
+            # command = "set RUSTFLAGS=-Awarnings"
+            # os.system(command)
+            os.putenv("RUSTFLAGS", "-Awarnings")
             # Set properly RUSTFLAGS
 
             # Build and execute command to start simulation
@@ -188,8 +194,9 @@ if __name__ == "__main__":
             # Build and execute command to start simulation
 
             # Reset default RUSTFLAGS
-            command = "set RUSTFLAGS="
-            os.system(command)
+            # command = "set RUSTFLAGS="
+            # os.system(command)
+            os.putenv("RUSTFLAGS", "")
             # Reset default RUSTFLAGS
     
             # Return to the old working directory
@@ -216,8 +223,8 @@ if __name__ == "__main__":
                         simulation_result[zone_name] += mean_ns
             # Extract from csv of the result some data
     
-        # Delete csv # TEMPORARY temporary removed file from directory
-        # os.remove(PATH_TO_TRACY_BENCHMARK_CSV_FILE)
+        # Delete csv
+        os.remove(PATH_TO_TRACY_BENCHMARK_CSV_FILE)
         # Delete csv
     
         # save simulation result in a data structures in central memory
