@@ -25,6 +25,8 @@ BENCHMARK_CSV_FILE = "benchmark_extracted.csv"
 BENCHMARK_RESULT = "benchmark_result.csv"
 INPUT_FILE = "input.txt"
 
+FILE_FOR_ELAPSED_TIME = "elapsed_time.txt"
+
 TRASH_TRACY_DEBUG_FILE = "simulation_tracy.txt"
 TRASH_SIMULATION_DEBUG_FILE = "simulation_debug.txt"
 
@@ -84,6 +86,7 @@ if __name__ == "__main__":
     PATH_TO_TRACY_BENCHMARK_CSV_FILE = os.path.join(PATH_TO_DEST_FOLDER, BENCHMARK_CSV_FILE)
     PATH_TO_BENCHMARK_RESULT = os.path.join(PATH_TO_DEST_FOLDER, BENCHMARK_RESULT)
     PATH_TO_TRASH_TRACY_DEBUG_FILE = os.path.join(PATH_TO_DEST_FOLDER, TRASH_TRACY_DEBUG_FILE)
+    PATH_TO_FILE_FOR_ELAPSED_TIME = os.path.join(PATH_TO_DEST_FOLDER, FILE_FOR_ELAPSED_TIME)
     # Compute some complete paths
 
     # Define a list that describe the fields to extract and save
@@ -222,8 +225,31 @@ if __name__ == "__main__":
             command = PATH_TO_TRACY_RETRIEVE_CSV_EXE + " " + PATH_TO_RESULT_TRACY_FILE + " > " + PATH_TO_TRACY_BENCHMARK_CSV_FILE 
             os.system(command)
             # Produce csv file with profiling's information from .tracy with tracy-csvexport
-    
-            # Extract from csv of the result some data    
+
+            # Extract elapsed time from the file produced by the simulation
+            with open(PATH_TO_FILE_FOR_ELAPSED_TIME, newline='') as elapsed_time_file:
+                # DEBUG
+                print("elapsed_time.txt lines: ")
+                # DEBUG
+
+                for line in elapsed_time_file:
+
+                    # DEBUG
+                    print(line)
+                    # DEBUG
+
+                    if line.isspace():
+                        continue
+                    
+                    parts = line.split('=')
+
+                    key, value = parts[0], parts[1]
+
+                    if key == "elapsed_time":
+                        simulation_result[key] += float(value)
+            # Extract elapsed time from the file produced by the simulation
+
+            # Extract from csv of the result some data
             with open(PATH_TO_TRACY_BENCHMARK_CSV_FILE, newline='') as csvfile:
                 csvreader = csv.DictReader(csvfile, delimiter=',')
     
@@ -249,16 +275,15 @@ if __name__ == "__main__":
         # save simulation result in a data structures in central memory
         # DEBUG
         print("BEFORE: " + str(simulation_result["system{name=\"flockers::step_system\"}"]))
+        print("AFTER: " + str(simulation_result["system{name=\"flockers::step_system\"}"] / NUM_RUN ))
         # DEBUG
-        
+
         for key, value in simulation_result.items(): 
-            v = value / NUM_RUN # make mean for the NUM_RUN
+            v = value / NUM_RUN # make mean for the NUM_RUN            
             v = v / 1000000000  # convert from nanoseconds to seconds
             simulation_result[key] = v
 
-        # DEBUG
-        print("AFTER: " + str(simulation_result["system{name=\"flockers::step_system\"}"]))
-        # DEBUG
+
         simulation_results.append(simulation_result)
         # save simulation result in a data structures in central memory
         
