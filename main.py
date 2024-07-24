@@ -189,17 +189,36 @@ if __name__ == "__main__":
     # 0 - mean of elapsed time step's zone 
     # 1 - mean of elapsed time update_field's zone
     # 2 - elapsed time of simulation
-    benchmark_result = open(PATH_TO_BENCHMARK_RESULT, "w")
-    for simulation_result in simulation_results:
-        # DEBUG
-        print(simulation_result)
-        # DEBUG
 
-        benchmark_result.write(str(simulation_result[zone_names[0]]))
-        benchmark_result.write(" ")
-        benchmark_result.write(str(simulation_result[zone_names[1]]))
-        benchmark_result.write(" ")
-        benchmark_result.write(str(simulation_result["elapsed_time"]))
-        benchmark_result.write("\n")
+    # benchmark_result = open(PATH_TO_BENCHMARK_RESULT, "w")
+    # for simulation_result in simulation_results:
+    #     # DEBUG
+    #     print(simulation_result)
+    #     # DEBUG
+
+    #     benchmark_result.write(str(simulation_result[zone_names[0]]))
+    #     benchmark_result.write(" ")
+    #     benchmark_result.write(str(simulation_result[zone_names[1]]))
+    #     benchmark_result.write(" ")
+    #     benchmark_result.write(str(simulation_result["elapsed_time"]))
+    #     benchmark_result.write("\n")
+
+    # DEBUG
+    print(simulation_results[0]["system{name=\"flockers::step_system\"}"])
+    print(simulation_results[0]["system{name=\"krabmaga::engine::fields::field_2d::update_field\"}"])
+    print(simulation_results[0]["elapsed_time"])
+    # DEBUG
+
+    fields = []
+    for zone_name in zone_names:
+        fields.append(zone_name)
+    fields.append("elapsed_time")
+
+    with open(PATH_TO_BENCHMARK_RESULT, "w", newline='') as csvfile:
+        benchmark_result = csv.DictWriter(csvfile, fieldnames=fields, delimiter='\t')
+
+        benchmark_result.writeheader()
+        for simulation_result in simulation_results:
+            benchmark_result.writerow(simulation_result)
     # save simulations' data in the file at the end
 #----------------------------------------------------------------------------------------------------------------
