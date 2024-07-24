@@ -145,11 +145,7 @@ if __name__ == "__main__":
         num_agents = simulation[1]
         field_size = simulation[2]
 
-        # Compute name and path of tracy's benchmark 
-        benchmark_tracy_values = ("benchmark", str(current_test), str(num_threads), str(num_agents), str(field_size), ".tracy")
-        benchmark_tracy_name = "_".join(benchmark_tracy_values)
-        PATH_TO_RESULT_TRACY_FILE = os.path.join(PATH_TO_DEST_FOLDER, benchmark_tracy_name)
-        # Compute name and path of tracy's benchmark
+
 
 
 
@@ -163,7 +159,24 @@ if __name__ == "__main__":
 
 
         # Repeat this operation for NUM_RUN
-        for _ in range(NUM_RUN):
+        for current_run in range(NUM_RUN):
+
+            # Compute name and path of tracy's benchmark
+            # name of tracy's benchmark:
+            # benchmark_(1)_(2)_(3)_(4)_(5).tracy
+            # (1) test number
+            # (2) number of a run of a test
+            # (3) number of threads for the test
+            # (4) number of agents for the test
+            # (5) size of field
+            exstension = ".tracy"
+            benchmark_tracy_values = ("benchmark", str(current_test), str(current_run+1), str(num_threads), str(num_agents), str(field_size))
+            benchmark_tracy_name = "_".join(benchmark_tracy_values) + exstension 
+            PATH_TO_RESULT_TRACY_FILE = os.path.join(PATH_TO_DEST_FOLDER, benchmark_tracy_name)
+            # Compute name and path of tracy's benchmark
+
+
+
             # DEBUG
             print("CURRENT WORKING DIRECTORY: " + os.getcwd())
             # DEBUG
@@ -188,8 +201,8 @@ if __name__ == "__main__":
             # Set properly RUSTFLAGS
 
             # Build and execute command to start simulation
-            arguments = " -- " + num_threads + " " + num_agents + " " + field_size
-            command = "cargo run --release --features \"krabmaga/multithreaded krabmaga/trace_tracy\"" + arguments
+            arguments = " -- " + num_threads + " " + num_agents + " " + field_size + " " + str(NUM_STEPS)
+            command = "cargo run -q --release --features \"krabmaga/multithreaded krabmaga/trace_tracy\"" + arguments
             os.system(command)
             # Build and execute command to start simulation
 
@@ -218,20 +231,31 @@ if __name__ == "__main__":
                     zone_name = row['name'] 
                     if zone_name in zone_names:
                         mean_ns = float(row['mean_ns'])
+
+                        # DEBUG
+                        if zone_name == "system{name=\"flockers::step_system\"}":
+                            print("mean_ns: " + str(mean_ns))
+                        # DEBUG
+
                         simulation_result[zone_name] += mean_ns
             # Extract from csv of the result some data
+
+
     
         # Delete csv
         os.remove(PATH_TO_TRACY_BENCHMARK_CSV_FILE)
         # Delete csv
     
         # save simulation result in a data structures in central memory
-        # TODO make simulation_result parameters the mean on NUM_RUN
         # DEBUG
         print("BEFORE: " + str(simulation_result["system{name=\"flockers::step_system\"}"]))
         # DEBUG
-        for key, value in simulation_result.items():
-            simulation_result[key] = value / NUM_RUN
+        
+        for key, value in simulation_result.items(): 
+            v = value / NUM_RUN # make mean for the NUM_RUN
+            v = v / 1000000000  # convert from nanoseconds to seconds
+            simulation_result[key] = v
+
         # DEBUG
         print("AFTER: " + str(simulation_result["system{name=\"flockers::step_system\"}"]))
         # DEBUG
