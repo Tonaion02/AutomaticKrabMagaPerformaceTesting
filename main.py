@@ -25,10 +25,11 @@ BENCHMARK_CSV_FILE = "benchmark_extracted.csv"
 BENCHMARK_RESULT = "benchmark_result.csv"
 INPUT_FILE = "input.txt"
 
-# number of steps for simulation
-NUM_STEPS = 200
-# number of repetition of the same simulation
-NUM_RUN = 5
+TRASH_TRACY_DEBUG_FILE = "simulation_tracy.txt"
+TRASH_SIMULATION_DEBUG_FILE = "simulation_debug.txt"
+
+NUM_STEPS = 200 # number of steps for simulation
+NUM_RUN = 5 # number of repetition of the same simulation 
 #----------------------------------------------------------------------------------------------------------------
 
 
@@ -69,13 +70,13 @@ if __name__ == "__main__":
             NUM_RUN = value
     # Retrieve command-line arguments
 
-    # Cleaning past garbage
+    # Cleaning past garbage's directory
     shutil.rmtree(PATH_TO_DEST_FOLDER, ignore_errors=True)
-    # Cleaning past garbage
+    # Cleaning past garbage's directory
 
-    # Create a garbage directory
+    # Create a garbage's directory
     os.mkdir(PATH_TO_DEST_FOLDER)
-    # Create a garbage directory
+    # Create a garbage's directory
 
     # Compute some complete paths
     PATH_TO_TRACY_EXE = os.path.join(PATH_TO_TRACY_FOLDER, TRACY_EXE)
@@ -84,7 +85,22 @@ if __name__ == "__main__":
     PATH_TO_BENCHMARK_RESULT = os.path.join(PATH_TO_DEST_FOLDER, BENCHMARK_RESULT)
     # Compute some complete paths
 
+    # Define a list that describe the fields to extract and save
+    # data to extract and save: 
+    #  0 mean_elapsed time for flocker's step's time zone 
+    #  1 mean_elapsed time for update_field's time zone
+    #  2 elapsed time of the simulation
+    # ATTENTION: fields' list describe the order in which data are written in row of csv file
+    zone_names = ["system{name=\"flockers::step_system\"}", "system{name=\"krabmaga::engine::fields::field_2d::update_field\"}"]
+
+    fields = []
+    for zone_name in zone_names:
+        fields.append(zone_name)
+    fields.append("elapsed_time")
+    # Define a list that describe the fields to extract and save
+
     # SETTING UP ENVIROMENT
+
 
 
 
@@ -129,88 +145,95 @@ if __name__ == "__main__":
         PATH_TO_RESULT_TRACY_FILE = os.path.join(PATH_TO_DEST_FOLDER, benchmark_tracy_name)
         # Compute name and path of tracy's benchmark
 
-        # DEBUG
-        print(os.getcwd())
-        # DEBUG
 
-        # Build and execute command to start tracy-capture(tracy's server) in background(in another thread)
-        # we must run in another thread tracy-capture so we can run the simulation in this
-        command = PATH_TO_TRACY_EXE + " -f -o " + PATH_TO_RESULT_TRACY_FILE
-        # DEBUG
-        print(command)
-        # DEBUG
-        process_tracy_capture = subprocess.Popen(command, shell=True)
-        # Build and execute command to start tracy-capture(tracy's server) in background(in another thread)
 
-        # Save the current working directory and chdir to simulation's folder
-        current_working_dir = os.getcwd()
-        os.chdir(PATH_TO_SIMULATION_FOLDER)
-        # Save the current working directory and chdir to simulation's folder
+        # Initialize simulation_result
+        # Initialize all the fields to zero because we need to do a mean of the results on all the runs
+        simulation_result = {"elapsed_time": float(0)}
+        for zone_name in zone_names:
+            simulation_result[zone_name] = float(0)
+        # Initialize simulation_result
 
-        # Build and execute command to start simulation
-        arguments = " -- " + num_threads + " " + num_agents + " " + field_size
-        command = "cargo run --release --features \"krabmaga/multithreaded krabmaga/trace_tracy\"" + arguments
-        os.system(command)
-        # Build and execute command to start simulation
 
-        # Return to the old working directory
-        os.chdir(current_working_dir)
-        # Return to the old working directory
-        
-        # Wait till tracy capture isn't ended
-        process_tracy_capture.wait()
-        # Wait till tracy capture isn't ended
 
-        # Produce csv file from tracy with tracy-csvexport
-        command = PATH_TO_TRACY_RETRIEVE_CSV_EXE + " " + PATH_TO_RESULT_TRACY_FILE + " > " + PATH_TO_TRACY_BENCHMARK_CSV_FILE 
-        os.system(command)
-        # Produce csv file from tracy with tracy-csvexport
+        # Repeat this operation for NUM_RUN
+        for _ in range(NUM_RUN):
+            # DEBUG
+            print(os.getcwd())
+            # DEBUG
+    
+            # Build and execute command to start tracy-capture(tracy's server) in background(in another thread)
+            # we must run in another thread tracy-capture so we can run the simulation in this thread
+            command = PATH_TO_TRACY_EXE + " -f -o " + PATH_TO_RESULT_TRACY_FILE + " > " + TRASH_TRACY_DEBUG_FILE
+            # DEBUG
+            print(command)
+            # DEBUG
+            process_tracy_capture = subprocess.Popen(command, shell=True)
+            # Build and execute command to start tracy-capture(tracy's server) in background(in another thread)
+    
+            # Save the current working directory and chdir to simulation's folder
+            current_working_dir = os.getcwd()
+            os.chdir(PATH_TO_SIMULATION_FOLDER)
+            # Save the current working directory and chdir to simulation's folder
+    
+            # Set properly RUSTFLAGS
+            command = "set RUSTFLAGS=-Awarnings"
+            os.system(command)
+            # Set properly RUSTFLAGS
 
-        # Extract from csv of the result some data
-        # data to extract: 
-        #  - mean_elapsed time for update_field's time zone
-        #  - mean_elapsed time for flocker's step's time zone 
-        #  - elapsed time of the simulation
-        zone_names = ["system{name=\"flockers::step_system\"}", "system{name=\"krabmaga::engine::fields::field_2d::update_field\"}"]
-        simulation_result = {"elapsed_time": 0}
+            # Build and execute command to start simulation
+            arguments = " -- " + num_threads + " " + num_agents + " " + field_size
+            command = "cargo run --release --features \"krabmaga/multithreaded krabmaga/trace_tracy\"" + arguments
+            os.system(command)
+            # Build and execute command to start simulation
 
-        with open(PATH_TO_TRACY_BENCHMARK_CSV_FILE, newline='') as csvfile:
-            csvreader = csv.DictReader(csvfile, delimiter=',')
-
-            for row in csvreader:
-                zone_name = row['name'] 
-                if zone_name in zone_names:
-                    mean_ns = float(row['mean_ns'])
-                    simulation_result[zone_name] = mean_ns
-        # Extract from csv of the result some data
-
+            # Reset default RUSTFLAGS
+            command = "set RUSTFLAGS="
+            os.system(command)
+            # Reset default RUSTFLAGS
+    
+            # Return to the old working directory
+            os.chdir(current_working_dir)
+            # Return to the old working directory
+            
+            # Wait till tracy-capture isn't ended
+            process_tracy_capture.wait()
+            # Wait till tracy-capture isn't ended
+    
+            # Produce csv file with profiling's information from .tracy with tracy-csvexport
+            command = PATH_TO_TRACY_RETRIEVE_CSV_EXE + " " + PATH_TO_RESULT_TRACY_FILE + " > " + PATH_TO_TRACY_BENCHMARK_CSV_FILE 
+            os.system(command)
+            # Produce csv file with profiling's information from .tracy with tracy-csvexport
+    
+            # Extract from csv of the result some data    
+            with open(PATH_TO_TRACY_BENCHMARK_CSV_FILE, newline='') as csvfile:
+                csvreader = csv.DictReader(csvfile, delimiter=',')
+    
+                for row in csvreader:
+                    zone_name = row['name'] 
+                    if zone_name in zone_names:
+                        mean_ns = float(row['mean_ns'])
+                        simulation_result[zone_name] += mean_ns
+            # Extract from csv of the result some data
+    
         # Delete csv # TEMPORARY temporary removed file from directory
         # os.remove(PATH_TO_TRACY_BENCHMARK_CSV_FILE)
         # Delete csv
-
+    
         # save simulation result in a data structures in central memory
+        # TODO make simulation_result parameters the mean on NUM_RUN
+        # DEBUG
+        print("Before: " + str(simulation_result["system{name=\"flockers::step_system\"}"]))
+        # DEBUG
+        for key, value in simulation_result.items():
+            simulation_result[key] = value / NUM_RUN
+        # DEBUG
+        print("After: " + str(simulation_result["system{name=\"flockers::step_system\"}"]))
+        # DEBUG
         simulation_results.append(simulation_result)
         # save simulation result in a data structures in central memory
-
-    # Until simulations isn't empty
-
-    # save simulations' data in the file at the end
-    # 0 - mean of elapsed time step's zone 
-    # 1 - mean of elapsed time update_field's zone
-    # 2 - elapsed time of simulation
-
-    # benchmark_result = open(PATH_TO_BENCHMARK_RESULT, "w")
-    # for simulation_result in simulation_results:
-    #     # DEBUG
-    #     print(simulation_result)
-    #     # DEBUG
-
-    #     benchmark_result.write(str(simulation_result[zone_names[0]]))
-    #     benchmark_result.write(" ")
-    #     benchmark_result.write(str(simulation_result[zone_names[1]]))
-    #     benchmark_result.write(" ")
-    #     benchmark_result.write(str(simulation_result["elapsed_time"]))
-    #     benchmark_result.write("\n")
+        
+        # Repeat this operation for NUM_RUN
 
     # DEBUG
     print(simulation_results[0]["system{name=\"flockers::step_system\"}"])
@@ -218,11 +241,9 @@ if __name__ == "__main__":
     print(simulation_results[0]["elapsed_time"])
     # DEBUG
 
-    fields = []
-    for zone_name in zone_names:
-        fields.append(zone_name)
-    fields.append("elapsed_time")
 
+
+    # save simulations' data in the file at the end
     with open(PATH_TO_BENCHMARK_RESULT, "w", newline='') as csvfile:
         benchmark_result = csv.DictWriter(csvfile, fieldnames=fields, delimiter='\t')
 
