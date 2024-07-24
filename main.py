@@ -24,6 +24,11 @@ TRACY_RETRIEVE_CSV_EXE = "tracy-csvexport.exe"
 BENCHMARK_CSV_FILE = "benchmark_extracted.csv"
 BENCHMARK_RESULT = "benchmark_result.csv"
 INPUT_FILE = "input.txt"
+
+# number of steps for simulation
+NUM_STEPS = 200
+# number of repetition of the same simulation
+NUM_RUN = 5
 #----------------------------------------------------------------------------------------------------------------
 
 
@@ -58,6 +63,10 @@ if __name__ == "__main__":
             PATH_TO_SIMULATION_FOLDER = value
         elif name.lower() == PATH_TO_TRACY_FOLDER:
             PATH_TO_TRACY_FOLDER = value
+        elif name.lower() == NUM_STEPS:
+            NUM_STEPS = value
+        elif name.lower() == NUM_RUN:
+            NUM_RUN = value
     # Retrieve command-line arguments
 
     # Cleaning past garbage
