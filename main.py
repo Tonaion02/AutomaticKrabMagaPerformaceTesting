@@ -281,6 +281,8 @@ if __name__ == "__main__":
         for key, value in simulation_result.items(): 
             v = value / NUM_RUN # make mean for the NUM_RUN            
             v = v / 1000000000  # convert from nanoseconds to seconds
+            # v = round(v, 2) # round to second decimal point
+            v = str(v).replace('.', ',') # convert to string and replace '.' with ','
             simulation_result[key] = v
 
 
