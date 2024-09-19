@@ -44,22 +44,24 @@ NUM_RUN = 5 # number of repetition of the same simulation
 #================================================================================================================
 if __name__ == "__main__":
 
-    # SETTING UP ENVIROMENT
+    # SETTING UP ENVIROMENT (START)
 
-    # Retrieve command-line arguments
+    # Retrieve command-line arguments (START)
     argv = sys.argv[1:]
     print(argv)
     for arg in argv:
-        # Split name and value of parameters
+        # Split name and value of parameters (START)
         line_splitted = arg.split('=')
         name, value = line_splitted[0], line_splitted[1]
-        # Split name and value of parameters
+        # Split name and value of parameters (END)
 
         # DEBUG
         print("name: " + name)
         print("value: " + value)
         # DEBUG
 
+        # TODO need to improve this part, distinguish parameters'name
+        # and parameters' default value.
         if name.lower() == PATH_TO_DEST_FOLDER:
             PATH_TO_DEST_FOLDER = value
         elif name.lower() == PATH_TO_SIMULATION_FOLDER:
@@ -70,26 +72,24 @@ if __name__ == "__main__":
             NUM_STEPS = value
         elif name.lower() == NUM_RUN:
             NUM_RUN = value
-    # Retrieve command-line arguments
+    # Retrieve command-line arguments (END)
 
     # Cleaning past garbage's directory
     shutil.rmtree(PATH_TO_DEST_FOLDER, ignore_errors=True)
-    # Cleaning past garbage's directory
 
     # Create a garbage's directory
     os.mkdir(PATH_TO_DEST_FOLDER)
-    # Create a garbage's directory
 
-    # Compute some complete paths
+    # Compute some complete paths (START)
     PATH_TO_TRACY_EXE = os.path.join(PATH_TO_TRACY_FOLDER, TRACY_EXE)
     PATH_TO_TRACY_RETRIEVE_CSV_EXE = os.path.join(PATH_TO_TRACY_FOLDER, TRACY_RETRIEVE_CSV_EXE)
     PATH_TO_TRACY_BENCHMARK_CSV_FILE = os.path.join(PATH_TO_DEST_FOLDER, BENCHMARK_CSV_FILE)
     PATH_TO_BENCHMARK_RESULT = os.path.join(PATH_TO_DEST_FOLDER, BENCHMARK_RESULT)
     PATH_TO_TRASH_TRACY_DEBUG_FILE = os.path.join(PATH_TO_DEST_FOLDER, TRASH_TRACY_DEBUG_FILE)
-    PATH_TO_FILE_FOR_ELAPSED_TIME = os.path.join(PATH_TO_DEST_FOLDER, FILE_FOR_ELAPSED_TIME)
-    # Compute some complete paths
-
-    # Define a list that describe the fields to extract and save
+    PATH_TO_FILE_FOR_ELAPSED_TIME = os.path.join(PATH_TO_SIMULATION_FOLDER, FILE_FOR_ELAPSED_TIME)
+    # Compute some complete paths (END)
+ 
+    # Define a list that describe the fields to extract and save (START)
     # data to extract and save: 
     #  0 mean_elapsed time for flocker's step's time zone 
     #  1 mean_elapsed time for update_field's time zone
@@ -101,14 +101,15 @@ if __name__ == "__main__":
     for zone_name in zone_names:
         fields.append(zone_name)
     fields.append("elapsed_time")
-    # Define a list that describe the fields to extract and save
+    # Define a list that describe the fields to extract and save (END)
 
-    # SETTING UP ENVIROMENT
-
-
+    # SETTING UP ENVIROMENT (END)
 
 
-    # Retrieve the inputs from file and save parameters of simulations in an object
+
+
+
+    # Retrieve the inputs from file and save parameters of simulations in an object (START)
     # The format expected is the sequent:
     # 0 number of threads
     # 1 number of agents
@@ -131,7 +132,7 @@ if __name__ == "__main__":
 
         simulation = (values[0], values[1], values[2])
         simulations.append(simulation)
-    # Retrieve the inputs from file and save parameters of simulations in an object
+    # Retrieve the inputs from file and save parameters of simulations in an object (END)
 
 
 
@@ -152,19 +153,19 @@ if __name__ == "__main__":
 
 
 
-        # Initialize simulation_result
+        # Initialize simulation_resultv (START)
         # Initialize all the fields to zero because we need to do a mean of the results on all the runs
         simulation_result = {"elapsed_time": float(0)}
         for zone_name in zone_names:
             simulation_result[zone_name] = float(0)
-        # Initialize simulation_result
+        # Initialize simulation_result (END)
 
 
 
-        # Repeat this operation for NUM_RUN
+        # Repeat this operation for NUM_RUN (START)
         for current_run in range(NUM_RUN):
 
-            # Compute name and path of tracy's benchmark
+            # Compute name and path of tracy's benchmark (START)
             # name of tracy's benchmark:
             # benchmark_(1)_(2)_(3)_(4)_(5).tracy
             # (1) test number
@@ -176,7 +177,7 @@ if __name__ == "__main__":
             benchmark_tracy_values = ("benchmark", str(current_test), str(current_run+1), str(num_threads), str(num_agents), str(field_size))
             benchmark_tracy_name = "_".join(benchmark_tracy_values) + exstension 
             PATH_TO_RESULT_TRACY_FILE = os.path.join(PATH_TO_DEST_FOLDER, benchmark_tracy_name)
-            # Compute name and path of tracy's benchmark
+            # Compute name and path of tracy's benchmark (END)
 
 
 
@@ -184,49 +185,44 @@ if __name__ == "__main__":
             print("CURRENT WORKING DIRECTORY: " + os.getcwd())
             # DEBUG
     
-            # Build and execute command to start tracy-capture(tracy's server) in background(in another thread)
+            # Build and execute command to start tracy-capture(tracy's server) in background(in another thread) (START)
             # we must run in another thread tracy-capture so we can run the simulation in this thread
             command = PATH_TO_TRACY_EXE + " -f -o " + PATH_TO_RESULT_TRACY_FILE + " > " + PATH_TO_TRASH_TRACY_DEBUG_FILE
             # DEBUG
             print("TRACY-CAPTURE: " + command)
             # DEBUG
             process_tracy_capture = subprocess.Popen(command, shell=True)
-            # Build and execute command to start tracy-capture(tracy's server) in background(in another thread)
+            # Build and execute command to start tracy-capture(tracy's server) in background(in another thread) (END)
     
             # Save the current working directory and chdir to simulation's folder
             current_working_dir = os.getcwd()
             os.chdir(PATH_TO_SIMULATION_FOLDER)
-            # Save the current working directory and chdir to simulation's folder
     
             # Set properly RUSTFLAGS
             # This is necessary to hide all the warnings generated by cargo, to not display that during this phase
             os.putenv("RUSTFLAGS", "-Awarnings")
-            # Set properly RUSTFLAGS
 
-            # Build and execute command to start simulation
+            # Build and execute command to start simulation (START)
             arguments = " -- " + num_threads + " " + num_agents + " " + field_size + " " + str(NUM_STEPS)
             command = "cargo run -q --release --features \"krabmaga/multithreaded krabmaga/trace_tracy\"" + arguments
             os.system(command)
-            # Build and execute command to start simulation
+            # Build and execute command to start simulation (END)
 
             # Reset default RUSTFLAGS
             os.putenv("RUSTFLAGS", "")
-            # Reset default RUSTFLAGS
     
             # Return to the old working directory
             os.chdir(current_working_dir)
-            # Return to the old working directory
             
             # Wait till tracy-capture isn't ended
             process_tracy_capture.wait()
-            # Wait till tracy-capture isn't ended
     
-            # Produce csv file with profiling's information from .tracy with tracy-csvexport
+            # Produce csv file with profiling's information from .tracy with tracy-csvexport (START)
             command = PATH_TO_TRACY_RETRIEVE_CSV_EXE + " " + PATH_TO_RESULT_TRACY_FILE + " > " + PATH_TO_TRACY_BENCHMARK_CSV_FILE 
             os.system(command)
-            # Produce csv file with profiling's information from .tracy with tracy-csvexport
+            # Produce csv file with profiling's information from .tracy with tracy-csvexport (END)
 
-            # Extract elapsed time from the file produced by the simulation
+            # Extract elapsed time from the file produced by the simulation (START)
             with open(PATH_TO_FILE_FOR_ELAPSED_TIME, newline='') as elapsed_time_file:
                 # DEBUG
                 print("elapsed_time.txt lines: ")
@@ -247,9 +243,9 @@ if __name__ == "__main__":
 
                     if key == "elapsed_time":
                         simulation_result[key] += float(value)
-            # Extract elapsed time from the file produced by the simulation
+            # Extract elapsed time from the file produced by the simulation (END)
 
-            # Extract from csv of the result some data
+            # Extract from csv of the result some data (START)
             with open(PATH_TO_TRACY_BENCHMARK_CSV_FILE, newline='') as csvfile:
                 csvreader = csv.DictReader(csvfile, delimiter=',')
     
@@ -264,15 +260,14 @@ if __name__ == "__main__":
                         # DEBUG
 
                         simulation_result[zone_name] += mean_ns
-            # Extract from csv of the result some data
+            # Extract from csv of the result some data (END)
 
 
     
         # Delete csv
         os.remove(PATH_TO_TRACY_BENCHMARK_CSV_FILE)
-        # Delete csv
     
-        # save simulation result in a data structures in central memory
+        # save simulation result in a data structures in central memory (START)
         # DEBUG
         print("BEFORE: " + str(simulation_result["system{name=\"flockers::step_system\"}"]))
         print("AFTER: " + str(simulation_result["system{name=\"flockers::step_system\"}"] / NUM_RUN ))
@@ -287,9 +282,9 @@ if __name__ == "__main__":
 
 
         simulation_results.append(simulation_result)
-        # save simulation result in a data structures in central memory
+        # save simulation result in a data structures in central memory (END)
         
-        # Repeat this operation for NUM_RUN
+        # Repeat this operation for NUM_RUN (END)
 
     # DEBUG
     print("SIMULATION_RESULTS:")
@@ -300,12 +295,12 @@ if __name__ == "__main__":
 
 
 
-    # save simulations' data in the file at the end
+    # save simulations' data in the file at the end (START)
     with open(PATH_TO_BENCHMARK_RESULT, "w", newline='') as csvfile:
         benchmark_result = csv.DictWriter(csvfile, fieldnames=fields, delimiter='\t')
 
         benchmark_result.writeheader()
         for simulation_result in simulation_results:
             benchmark_result.writerow(simulation_result)
-    # save simulations' data in the file at the end
+    # save simulations' data in the file at the end (END)
 #----------------------------------------------------------------------------------------------------------------
