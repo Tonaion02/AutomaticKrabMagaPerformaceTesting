@@ -14,7 +14,8 @@ import csv
 #================================================================================================================ 
 # ENVIROMENT-VARIABLES
 #================================================================================================================
-PATH_TO_TRACY_FOLDER = "C:/utils/trace_0.11.0"
+PATH_TO_TRACY_CAPTURE_FOLDER = "C:/utils/trace_0.11.0"
+PATH_TO_TRACY_CSV_EXPORT_FOLDER = "C:/utils/trace_0.11.0"
 PATH_TO_SIMULATION_FOLDER = "C:/source/rust/KrABMagaTirocinio_provisory/examples/flockers"
 PATH_TO_DEST_FOLDER = "garbage"
 
@@ -81,8 +82,8 @@ if __name__ == "__main__":
     os.mkdir(PATH_TO_DEST_FOLDER)
 
     # Compute some complete paths (START)
-    PATH_TO_TRACY_EXE = os.path.join(PATH_TO_TRACY_FOLDER, TRACY_EXE)
-    PATH_TO_TRACY_RETRIEVE_CSV_EXE = os.path.join(PATH_TO_TRACY_FOLDER, TRACY_RETRIEVE_CSV_EXE)
+    PATH_TO_TRACY_EXE = os.path.join(PATH_TO_TRACY_CAPTURE_FOLDER, TRACY_EXE)
+    PATH_TO_TRACY_RETRIEVE_CSV_EXE = os.path.join(PATH_TO_TRACY_CSV_EXPORT_FOLDER, TRACY_RETRIEVE_CSV_EXE)
     PATH_TO_TRACY_BENCHMARK_CSV_FILE = os.path.join(PATH_TO_DEST_FOLDER, BENCHMARK_CSV_FILE)
     PATH_TO_BENCHMARK_RESULT = os.path.join(PATH_TO_DEST_FOLDER, BENCHMARK_RESULT)
     PATH_TO_TRASH_TRACY_DEBUG_FILE = os.path.join(PATH_TO_DEST_FOLDER, TRASH_TRACY_DEBUG_FILE)
