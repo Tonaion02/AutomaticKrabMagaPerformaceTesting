@@ -98,11 +98,15 @@ if __name__ == "__main__":
     #  1 mean_elapsed time for update_field's time zone
     #  2 elapsed time of the simulation
     # ATTENTION: fields' list describe the order in which data are written in row of csv file
-    zone_names = ["system{name=\"flockers::step_system\"}", "system{name=\"krabmaga::engine::fields::field_2d::update_field\"}"]
+    # zone_names = ["system{name=\"flockers::step_system\"}", "system{name=\"krabmaga::engine::fields::field_2d::update_field\"}"]
+    zone_names = ["system{name=\"wolfsheepgrass::update_wolves_field\"}", "system{name=\"wolfsheepgrass::update_sheeps_field\"}", 
+                  "system{name=\"wolfsheepgrass::step\"}", "system_commands{name=\"wolfsheepgrass::step\"}", ]
 
     fields = []
     for zone_name in zone_names:
         fields.append(zone_name)
+    
+    # NOTE: Not more useful here
     # fields.append("elapsed_time")
     # Define a list that describe the fields to extract and save (END)
 
@@ -151,7 +155,10 @@ if __name__ == "__main__":
 
         # Initialize simulation_resultv (START)
         # Initialize all the fields to zero because we need to do a mean of the results on all the runs
-        simulation_result = {"elapsed_time": float(0)}
+        
+        # NOTE: Not more useful here
+        # simulation_result = {"elapsed_time": float(0)}
+        simulation_result = {}
         for zone_name in zone_names:
             simulation_result[zone_name] = float(0)
         # Initialize simulation_result (END)
@@ -183,6 +190,7 @@ if __name__ == "__main__":
             print("CURRENT WORKING DIRECTORY: " + os.getcwd())
             # DEBUG
     
+            # NOTE: Not more useful here (START)
             # # Build and execute command to start tracy-capture(tracy's server) in background(in another thread) (START)
             # # we must run in another thread tracy-capture so we can run the simulation in this thread
             # command = PATH_TO_TRACY_EXE + " -f -o " + PATH_TO_RESULT_TRACY_FILE + " > " + PATH_TO_TRASH_TRACY_DEBUG_FILE
@@ -214,6 +222,7 @@ if __name__ == "__main__":
             
             # # Wait till tracy-capture isn't ended
             # process_tracy_capture.wait()
+            # NOTE: Not more useful here (END)
     
             # Produce csv file with profiling's information from .tracy with tracy-csvexport (START)
             command = PATH_TO_TRACY_RETRIEVE_CSV_EXE + " " + PATH_TO_RESULT_TRACY_FILE + " > " + PATH_TO_TRACY_BENCHMARK_CSV_FILE 
@@ -223,6 +232,7 @@ if __name__ == "__main__":
             # Wait until tracy-csv-extractor isn't ended
             process_csv_extractor.wait()
 
+            # NOTE: Not more useful here (START)
             # # Extract elapsed time from the file produced by the simulation (START)
             # with open(PATH_TO_FILE_FOR_ELAPSED_TIME, newline='') as elapsed_time_file:
             #     # DEBUG
@@ -245,6 +255,7 @@ if __name__ == "__main__":
             #         if key == "elapsed_time":
             #             simulation_result[key] += float(value)
             # # Extract elapsed time from the file produced by the simulation (END)
+            # NOTE: Not more useful here (END)
 
             # Extract from csv of the result some data (START)
             with open(PATH_TO_TRACY_BENCHMARK_CSV_FILE, newline='') as csvfile:
@@ -264,10 +275,6 @@ if __name__ == "__main__":
         os.remove(PATH_TO_TRACY_BENCHMARK_CSV_FILE)
     
         # save simulation result in a data structures in central memory (START)
-        # DEBUG
-        # print("BEFORE: " + str(simulation_result["system{name=\"flockers::step_system\"}"]))
-        # print("AFTER: " + str(simulation_result["system{name=\"flockers::step_system\"}"] / NUM_RUN ))
-        # DEBUG
 
         for key, value in simulation_result.items(): 
             v = value / NUM_RUN # make mean for the NUM_RUN            
